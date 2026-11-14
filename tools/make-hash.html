@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Same strict security policy as the game: no outside scripts, no network. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'">
+<meta name="robots" content="noindex, nofollow">
+<title>Answer fingerprint maker</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; background: #fff8ec; color: #2b1d12; }
+  label { display: block; margin: 16px 0 4px; font-weight: 700; }
+  input, select { font-size: 16px; padding: 8px; width: 100%; box-sizing: border-box; }
+  button { margin-top: 16px; font-size: 16px; padding: 8px 16px; }
+  code { display: block; margin-top: 16px; padding: 12px; background: #2b1d12; color: #9dffd6; word-break: break-all; }
+  .muted { color: #7a6a5a; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>Answer fingerprint maker</h1>
+<p class="muted">Makes the fingerprint for a new answer, to paste into <b>js/answer-hashes.js</b>.
+Everything happens in this browser tab; nothing is sent anywhere.</p>
+
+<form id="form" autocomplete="off">
+  <label for="puzzle">Puzzle</label>
+  <select id="puzzle">
+    <option>riddle-1</option><option>riddle-2</option><option>riddle-3</option>
+    <option>night</option><option>village</option>
+  </select>
+  <label for="answer">Answer</label>
+  <input id="answer" type="text" spellcheck="false">
+  <button>Make fingerprint</button>
+</form>
+<code id="result">…</code>
+<p class="muted">Capitals, spaces, punctuation and a leading "the" are ignored, exactly as in the game.</p>
+
+<script src="../js/config.js"></script>
+<script src="../js/game.js"></script>
+<script src="make-hash.js"></script>
+</body>
+</html>
