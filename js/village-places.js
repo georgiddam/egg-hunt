@@ -30,7 +30,8 @@
 
   const LOOKS = {
     robot: { robot: true },
-    barber: { skin: '#e9be98', hair: '#2b2b2b', shirt: '#f4f1ea', pants: '#2b2b33', glasses: true }
+    barber: { skin: '#e9be98', hair: '#2b2b2b', shirt: '#f4f1ea', pants: '#2b2b33', glasses: true },
+    gym: { skin: '#d9a77c', hair: '#1d1d1d', shirt: '#2b2b33', pants: '#3a3a44', muscly: true }
   };
 
   // The bookshelf in the library: [title, spine colour]. No authors, on purpose.
@@ -94,8 +95,39 @@
       dog: ['🐕 A farm dog. Very good boy.', 'A dog\'s nose print is as unique as a human fingerprint.']
     };
 
-    function funFact(title, fact) {
-      say(`<p class="big-line">${title}</p><p class="fact">💡 <b>Fun fact:</b> ${fact}</p>`);
+    function funFact(title, fact, buttons) {
+      say(`<p class="big-line">${title}</p><p class="fact">💡 <b>Fun fact:</b> ${fact}</p>`, buttons);
+    }
+
+    /* ---- Pot plants: water them and they grow (up to 4 times) ---------- */
+
+    const PLANT_FACTS = [
+      'Plants grow towards the light. It\'s called phototropism.',
+      'Bamboo can grow almost a metre in a single day.',
+      'Young sunflowers turn to follow the sun across the sky.',
+      'Tomatoes and potatoes are close cousins, in the nightshade family.',
+      'Over-watering kills more house plants than forgetting to water them.',
+      'Talking to plants might actually help: your breath gives them a little extra CO₂.'
+    ];
+    let plantFactIndex = 0;
+
+    function makePlants(positions) {
+      return positions.map(([x, y]) => ({ x, y, growth: 0 }));
+    }
+    function plantThings(plants) {
+      return plants.map(plant => ({
+        area: [plant.x - 4, plant.y - 26, 22, 46],
+        label: 'Water the plant',
+        action: () => {
+          const fact = PLANT_FACTS[plantFactIndex++ % PLANT_FACTS.length];
+          if (plant.growth < 4) {
+            plant.growth++;
+            funFact(plant.growth === 4 ? '🌺 You water the plant. It grows, and flowers!' : '🪴 You water the plant. It grows!', fact);
+          } else {
+            funFact('🌳 It can\'t get any bigger. Any more and it needs its own ticket.', fact);
+          }
+        }
+      }));
     }
 
     const outside = {
@@ -135,7 +167,7 @@
           .concat([{ kind: 'owl', name: 'owl', fixed: { x: 384, y: 252, facing: -1 } }])   // on a fence post
       },
       inspectAnimal(animal) {
-        if (animal.kind === 'owl') api.sound.hoot();
+        api.sound.animal(animal.kind);
         funFact(...ANIMAL_LINES[animal.kind]);
       },
       exits: [
@@ -222,6 +254,7 @@
      * =================================================================== */
 
     const SHELF_X = 168;
+    const libraryPlants = makePlants([[410, 250], [46, 250]]);
     const library = {
       id: 'library',
       title: 'The Library',
@@ -239,7 +272,7 @@
             A bookmark says: <i>"Short read." — ${n.player}</i></p>
             <p class="fact">💡 <b>Fun fact:</b> Asimov wrote or edited more than 500 books, and he typed about 90 words a minute.</p>
             <p class="muted small">✍️ You scribble a note in the margin: "Not a short read."</p>`); } }
-      ],
+      ].concat(plantThings(libraryPlants)),
       people: [
         {
           id: 'robot', name: 'Librarian', plainName: 'LIBRARIAN', x: 360, y: 110, facing: 'left', look: LOOKS.robot, avatarColour: '#7d8893',
@@ -270,8 +303,7 @@
         paint.rect(90, 182, 9, 8, '#f4ecd8');
         paint.rect(100, 182, 9, 8, '#efe6d4');
         paint.rect(99, 182, 1, 8, '#9a8a6a');
-        paint.plant(410, 250);
-        paint.plant(46, 250);
+        libraryPlants.forEach(plant => paint.plant(plant.x, plant.y, plant.growth));
       }
     };
 
@@ -279,20 +311,52 @@
      * BARBER: a chair, a barber and a mirror
      * =================================================================== */
 
-    const MIRROR_SVG = `
+    // The reflection, with or without the afro wig.
+    const mirrorSvg = afro => `
       <svg class="mirror" viewBox="0 0 200 220" role="img" aria-label="Your reflection in the mirror">
         <ellipse cx="100" cy="110" rx="92" ry="104" fill="#c9a24d"/>
         <ellipse cx="100" cy="110" rx="82" ry="94" fill="#dff1fb"/>
+        <clipPath id="mirrorGlass"><ellipse cx="100" cy="110" rx="82" ry="94"/></clipPath>
+        <g clip-path="url(#mirrorGlass)"><g transform="translate(20 34) scale(.8)">
         <rect x="62" y="150" width="76" height="60" rx="24" fill="#b8322a"/>
         <path d="M62 170 h76 M62 190 h76 M86 150 v60 M114 150 v60" stroke="#5e1612" stroke-width="3"/>
         <ellipse cx="54" cy="104" rx="9" ry="14" fill="#efc39b"/>
         <ellipse cx="146" cy="104" rx="9" ry="14" fill="#efc39b"/>
+        ${afro ? '<ellipse cx="100" cy="76" rx="86" ry="78" fill="#2b1d12"/><circle cx="43" cy="130" r="16" fill="#2b1d12"/><circle cx="24" cy="101" r="16" fill="#2b1d12"/><circle cx="21" cy="66" r="16" fill="#2b1d12"/><circle cx="35" cy="35" r="16" fill="#2b1d12"/><circle cx="64" cy="12" r="16" fill="#2b1d12"/><circle cx="100" cy="4" r="16" fill="#2b1d12"/><circle cx="136" cy="12" r="16" fill="#2b1d12"/><circle cx="165" cy="35" r="16" fill="#2b1d12"/><circle cx="179" cy="66" r="16" fill="#2b1d12"/><circle cx="176" cy="101" r="16" fill="#2b1d12"/><circle cx="157" cy="130" r="16" fill="#2b1d12"/><circle cx="60" cy="34" r="6" fill="#3a2818"/><circle cx="132" cy="26" r="7" fill="#3a2818"/><circle cx="160" cy="70" r="6" fill="#3a2818"/>' : ''}
         <ellipse cx="100" cy="96" rx="46" ry="56" fill="#f1c9a0"/>
-        <ellipse cx="82" cy="58" rx="16" ry="8" fill="#fff" opacity=".75" transform="rotate(-20 82 58)"/>
+        ${afro ? '<ellipse cx="100" cy="46" rx="52" ry="20" fill="#2b1d12"/>'
+               : '<ellipse cx="82" cy="58" rx="16" ry="8" fill="#fff" opacity=".75" transform="rotate(-20 82 58)"/>'}
         <circle cx="84" cy="100" r="5" fill="#1b1b1b"/><circle cx="116" cy="100" r="5" fill="#1b1b1b"/>
         <path d="M84 126 q16 12 32 0" stroke="#7a3a2a" stroke-width="4" fill="none" stroke-linecap="round"/>
+        </g></g>
         <path d="M30 40 l8 8 M38 40 l-8 8 M160 160 l6 6 M166 160 l-6 6" stroke="#fff" stroke-width="3"/>
       </svg>`;
+
+    const barberPlants = makePlants([[46, 250], [410, 250]]);
+
+    // Talking to the barber: pick a service.
+    function barberChat() {
+      const wearingWig = api.flags.afro;
+      const line = wearingWig ? 'Looking good! Want to keep the afro?' : 'Take a seat! So, what are we doing today... ah.';
+      say(`
+        <div class="speaker">
+          <div class="avatar" style="background:#3a5a8a">BA</div>
+          <div><div class="who">Barber</div><p>${line}</p></div>
+        </div>`, [
+        wearingWig
+          ? { label: 'Take the wig off', onClick: () => {
+              api.setFlag('afro', false);
+              say('<p class="big-line">💈 Back to the classic look. Shiny as ever.</p>');
+            } }
+          : { label: 'Afro wig, please', primary: true, onClick: () => {
+              api.setFlag('afro', true);
+              api.sound.writing(1.2);
+              say('<p class="big-line">✂️ Snip, snip, fluff... There you go: a magnificent afro. Very 1970s disco. Go and have a look in the mirror.</p>');
+            } },
+        { label: 'Just a polish', onClick: () => say('<p class="big-line">✨ A quick polish, on the house. You could land planes with that shine.</p>') },
+        { label: 'Bye', onClick: api.close }
+      ]);
+    }
 
     const barber = {
       id: 'barber',
@@ -303,19 +367,20 @@
       ]),
       things: [
         { area: [196, 40, 88, 28], label: 'Look in the mirror', action: () => say(`
-            ${MIRROR_SVG}
-            <p class="big-line center">Count the hairs. Take your time.</p>`) },
+            ${mirrorSvg(api.flags.afro)}
+            <p class="big-line center">${api.flags.afro
+              ? 'Nice wig! But count the hairs that actually grow on your head.'
+              : 'Count the hairs. Take your time.'}</p>`) },
         { area: [380, 40, 40, 30], label: 'Read the price list', action: () => say(`
             <h3>💈 Price list</h3>
-            <p>Haircut ... $30<br>Beard trim ... $15<br>Polish ... free</p>`) }
-      ],
+            <p>Haircut ... $30<br>Beard trim ... $15<br>Afro wig ... $40<br>Polish ... free</p>
+            <p class="muted small">Ask the barber for the wig.</p>`) }
+      ].concat(plantThings(barberPlants)),
       people: [
         {
           id: 'barber', name: 'Barber', plainName: 'BARBER', x: 290, y: 140, facing: 'left', look: LOOKS.barber, avatarColour: '#3a5a8a',
-          lines: [
-            'Take a seat! So, what are we doing today... ah.',
-            "Tell you what, I'll give it a quick polish. On the house."
-          ]
+          lines: [''],
+          talk: barberChat
         }
       ],
       exits: [{ area: ROOM_EXIT_AREA, to: 'outside' }],
@@ -338,14 +403,15 @@
         paint.rect(236, 126, 8, 8, '#9aa6b2');
         // Price list
         paint.paper(384, 6, 32, 28);
-        paint.plant(46, 250);
-        paint.plant(410, 250);
+        barberPlants.forEach(plant => paint.plant(plant.x, plant.y, plant.growth));
       }
     };
 
     /* ======================================================================
-     * LODGE: the safe and the brew fridge
+     * LODGE: the safe, the brew fridge and a mini gym at the back
      * =================================================================== */
+
+    const lodgePlants = makePlants([[410, 250]]);
 
     const lodge = {
       id: 'lodge',
@@ -354,7 +420,9 @@
         [32, 140, 26, 60],    // fireplace
         [208, 40, 64, 34],    // safe
         [380, 40, 26, 32],    // brew fridge
-        [64, 206, 24, 22]     // armchair
+        [64, 206, 24, 22],    // armchair
+        [324, 100, 44, 12],   // weight bench
+        [420, 84, 22, 40]     // dumbbell rack
       ]),
       things: [
         { area: [204, 40, 72, 38], label: 'Open the safe', action: () => api.openSafe() },
@@ -364,9 +432,24 @@
         { area: [32, 140, 32, 60], label: 'Warm up by the fire', action: () => {
             api.sound.crackle(5);
             funFact('🔥 Warm and cosy. The fire crackles and pops.', 'The blue part of a flame is the hottest part.');
-          } }
+          } },
+        { area: [416, 80, 28, 48], label: 'Lift some weights', action: () => funFact(
+            '🏋️ You lift a dumbbell. Then put it down. Gently.',
+            'Your muscles already store some creatine. Topping it up helps them refill their quick energy (ATP), which helps with short, heavy efforts like lifting.') },
+        { area: [320, 96, 52, 20], label: 'Sit on the bench', action: () => say(
+            '<p class="big-line">🛋️ You sit on the weight bench. That counts as a set, right?</p>') }
+      ].concat(plantThings(lodgePlants)),
+      people: [
+        {
+          id: 'gym', name: 'Gym guy', plainName: 'GYM GUY', x: 384, y: 136, facing: 'left', look: LOOKS.gym, avatarColour: '#2b2b33',
+          lines: [
+            'Oi! Need a spotter? You look like you lift. Well, you lift a lot of eggs.',
+            'Creatine and chicken, mate. That\'s the whole secret. <span class="muted">Fun fact: creatine is one of the most studied supplements there is.</span>',
+            'Everyone keeps asking me about Ozempic and Mounjaro. <span class="muted">Fun fact: they were made for type 2 diabetes. They copy a gut hormone, GLP-1, that tells your brain "you\'re full". Mounjaro copies a second one too.</span>',
+            'Leg day? Never heard of it.'
+          ]
+        }
       ],
-      people: [],
       exits: [{ area: ROOM_EXIT_AREA, to: 'outside' }],
       arrive: ROOM_ARRIVE,
       draw(paint, frame) {
@@ -395,6 +478,23 @@
         paint.rect(382, 42, 22, 28, '#c0c6cc');
         paint.rect(400, 48, 2, 8, '#6a7078');
         paint.rect(385, 45, 7, 3, '#e2a400');
+        // Mini gym: a mat, a weight bench and a dumbbell rack
+        paint.rect(316, 86, 130, 70, '#3a3a40');
+        paint.rect(318, 88, 126, 66, '#46464e');
+        paint.rect(324, 100, 44, 12, '#2b2b33');
+        paint.rect(326, 102, 40, 6, '#c8302a');
+        paint.rect(328, 94, 2, 10, '#9aa6b2');
+        paint.rect(362, 94, 2, 10, '#9aa6b2');
+        paint.rect(324, 93, 44, 2, '#9aa6b2');      // barbell
+        paint.rect(320, 90, 4, 8, '#1b1b1b');
+        paint.rect(368, 90, 4, 8, '#1b1b1b');
+        paint.rect(420, 84, 22, 40, '#5c626c');
+        for (let y = 90; y < 122; y += 8) {
+          paint.rect(422, y, 4, 4, '#1b1b1b');
+          paint.rect(426, y + 1, 10, 2, '#9aa6b2');
+          paint.rect(436, y, 4, 4, '#1b1b1b');
+        }
+        lodgePlants.forEach(plant => paint.plant(plant.x, plant.y, plant.growth));
       }
     };
 

@@ -25,6 +25,7 @@
   const FEET_HEIGHT = 12;
 
   const PLAYER_LOOK = { skin: '#f1c9a0', bald: true, shirt: '#b8322a', plaid: '#5e1612', pants: '#2c4a7a' };
+  const PLAYER_WITH_AFRO = Object.assign({}, PLAYER_LOOK, { afro: true });   // after a visit to the barber
 
   // Picture hints shown under each digit of the safe: where to look for it.
   const SAFE_HINTS = [
@@ -319,8 +320,8 @@
         showSign,
         sound: Game.sound,
         flags: state.flags,
-        setFlag(name) {
-          state.flags[name] = true;
+        setFlag(name, value) {
+          state.flags[name] = value === undefined ? true : value;
           saveVillageState(state);
         },
         openSafe
@@ -399,7 +400,7 @@
           area: [person.x - 2, person.y - 14, 20, 28],
           label: 'Talk to ' + person.name,
           person,
-          action: () => talkTo(person)
+          action: () => (person.talk ? person.talk() : talkTo(person))
         }));
         animals.forEach(animal => list.push({
           area: [animal.x - 9, animal.y - 16, 18, 18],
@@ -670,6 +671,7 @@
 
       function draw(frame) {
         place.draw(paint, frame);
+        player.look = state.flags.afro ? PLAYER_WITH_AFRO : PLAYER_LOOK;
 
         // Draw everyone, further down the screen last, so they appear in front.
         const characters = place.people.map(person => ({ y: person.y + FEET_HEIGHT, draw: () => paint.person(person, frame) }))

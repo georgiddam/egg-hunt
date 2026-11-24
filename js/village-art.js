@@ -132,10 +132,21 @@
       }
     };
 
-    paint.plant = function (x, y) {
+    // A pot plant. `growth` (0 to 4) makes it taller and bushier; at 4 it flowers.
+    paint.plant = function (x, y, growth) {
+      const g = growth || 0;
       rect(x + 2, y + 10, 10, 8, '#a0522d');
-      rect(x, y, 14, 10, '#2f8a4c');
-      rect(x + 3, y - 4, 8, 6, '#3fa35c');
+      rect(x + 1, y + 9, 12, 2, '#8a4423');
+      rect(x - g, y, 14 + g * 2, 10, '#2f8a4c');
+      for (let i = 0; i <= g; i++) {
+        rect(x + 3 - i, y - 4 - i * 5, 8 + i * 2, 6, i % 2 ? '#2f8a4c' : '#3fa35c');
+      }
+      if (g >= 4) {
+        [[x - 2, y - 14], [x + 13, y - 10], [x + 5, y - 26], [x + 1, y - 2]].forEach(([fx, fy]) => {
+          rect(fx, fy, 3, 3, '#ff6b8a');
+          rect(fx + 1, fy + 1, 1, 1, '#ffd93b');
+        });
+      }
     };
 
     // A sheet of paper pinned to a wall, with a few lines of "writing".
@@ -180,10 +191,16 @@
         rect(left + 6, top + 12, 1, 10, look.plaid);
         rect(left + 10, top + 12, 1, 10, look.plaid);
       }
-      rect(left + 1, top + 13, 2, 7, look.shirt);                                 // arms
-      rect(left + 13, top + 13, 2, 7, look.shirt);
-      rect(left + 1, top + 20, 2, 2, look.skin);                                  // hands
-      rect(left + 13, top + 20, 2, 2, look.skin);
+      if (look.muscly) {                                                          // big bare arms
+        rect(left - 1, top + 12, 4, 9, look.skin);
+        rect(left + 13, top + 12, 4, 9, look.skin);
+        rect(left, top + 12, 16, 2, look.shirt);
+      } else {
+        rect(left + 1, top + 13, 2, 7, look.shirt);                               // arms
+        rect(left + 13, top + 13, 2, 7, look.shirt);
+        rect(left + 1, top + 20, 2, 2, look.skin);                                // hands
+        rect(left + 13, top + 20, 2, 2, look.skin);
+      }
       rect(left + 4, top + 3, 8, 9, look.skin);                                   // head
 
       if (look.longHair) {
@@ -191,7 +208,14 @@
         rect(left + 12, top + 3, 1, 11, look.hair);
       }
       if (person.facing === 'up' && !look.bald) rect(left + 4, top + 3, 8, 8, look.hair);   // back of the head
-      if (look.bald) {
+      if (look.afro) {                                                            // the barber's afro wig
+        const AFRO = '#2b1d12';
+        rect(left + 1, top - 5, 14, 9, AFRO);
+        rect(left + 3, top - 6, 10, 1, AFRO);
+        rect(left + 1, top + 4, 3, 5, AFRO);
+        rect(left + 12, top + 4, 3, 5, AFRO);
+        if (person.facing === 'up') rect(left + 3, top + 3, 10, 8, AFRO);
+      } else if (look.bald) {
         rect(left + 5, top + 2, 6, 1, look.skin);                                 // round top of the head
         rect(left + 6, top + 3, 2, 1, '#fff6e6');                                 // shine
       } else if (look.hat) {

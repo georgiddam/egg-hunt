@@ -7,6 +7,10 @@
  *   Game.sound.hoot()     an owl: hoo-hoooo
  *   Game.sound.splash()   a fishing line hitting the water
  *   Game.sound.chime()    a happy little tune (the safe opening)
+ *   Game.sound.writing()  a pen scribbling
+ *   Game.sound.animal(kind)  moo, baa, oink, woof, cluck, honk, hoot...
+ *
+ * The animal noises are cartoon versions, built from simple tones and filters.
  */
 (function () {
   'use strict';
@@ -107,6 +111,51 @@
       if (!ac) return;
       const now = ac.currentTime;
       [523, 659, 784, 1047].forEach((frequency, i) => tone(ac, now + i * 0.12, frequency, 0.5, 0.2, 'triangle'));
+    },
+
+    animal(kind) {
+      const ac = getAudio();
+      if (!ac) return;
+      const now = ac.currentTime;
+      // One "voice": a buzzy tone sliding from one pitch to another, shaped by a filter.
+      const voice = (at, from, to, length, volume, filterFrequency, wobble) => {
+        const osc = ac.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(from, now + at);
+        osc.frequency.exponentialRampToValueAtTime(to, now + at + length);
+        if (wobble) {   // vibrato, for the sheep's "baa-aa-aa"
+          const lfo = ac.createOscillator();
+          lfo.frequency.value = wobble;
+          const depth = ac.createGain();
+          depth.gain.value = from * 0.06;
+          lfo.connect(depth).connect(osc.frequency);
+          lfo.start(now + at);
+          lfo.stop(now + at + length + 0.05);
+        }
+        const filter = ac.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = filterFrequency;
+        filter.Q.value = 4;
+        const gain = ac.createGain();
+        gain.gain.setValueAtTime(0.0001, now + at);
+        gain.gain.exponentialRampToValueAtTime(volume, now + at + Math.min(0.08, length / 3));
+        gain.gain.setValueAtTime(volume, now + at + length * 0.7);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + at + length);
+        osc.connect(filter).connect(gain).connect(ac.destination);
+        osc.start(now + at);
+        osc.stop(now + at + length + 0.05);
+      };
+      switch (kind) {
+        case 'cow':      voice(0, 120, 95, 1.3, 0.35, 500); break;                                   // mooooo
+        case 'sheep':    voice(0, 280, 250, 0.9, 0.25, 1600, 9); break;                              // baa-aa-aa
+        case 'pig':      voice(0, 220, 150, 0.16, 0.3, 900); voice(0.22, 240, 160, 0.18, 0.3, 900); break;   // oink oink
+        case 'dog':      voice(0, 420, 200, 0.12, 0.35, 1400); voice(0.22, 440, 210, 0.14, 0.35, 1400); break; // woof woof
+        case 'hen':      [0, 0.13, 0.26].forEach(at => voice(at, 700, 500, 0.08, 0.2, 2200)); voice(0.42, 600, 900, 0.3, 0.22, 2200); break; // buk-buk-bukAAK
+        case 'goose':    voice(0, 360, 320, 0.25, 0.3, 1300); voice(0.35, 380, 330, 0.3, 0.3, 1300); break;    // honk honk
+        case 'platypus': voice(0, 90, 80, 0.6, 0.3, 400, 18); break;                                 // a low little growl
+        case 'kiwi':     [0, 0.3, 0.6].forEach(at => tone(ac, now + at, 1800, 0.22, 0.15).frequency.exponentialRampToValueAtTime(3200, now + at + 0.22)); break; // shrill whistles
+        case 'owl':      Game.sound.hoot(); break;
+      }
     },
 
     // A pen scribbling on paper: short scratchy strokes with little pauses.
