@@ -39,7 +39,7 @@ itself is never on this site, only on the password-protected Pastebin.
 | `js/config.js` | Names, the prize link and the final message. |
 | `js/answer-hashes.js` | Fingerprints of the correct answers. |
 | `js/game.js` | Shared core: answer checking, progress saving, switching stages, the code bar. |
-| `js/sounds.js` | Small sound effects, made in the browser (no sound files). |
+| `js/sounds.js` | Sound effects and the lo-fi jazz background music, made in the browser (no sound files). The 🔊 button turns the music off. |
 | `js/clue-timer.js` | The timed clues and the "Clues" list, used by stages 2 and 3. |
 | `js/stage-1-riddles.js` | Intro screen and the riddle chain. |
 | `js/stage-2-night-watch.js` | The farm picture, the magnifying glass and the timed clues. |

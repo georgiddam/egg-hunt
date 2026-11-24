@@ -29,13 +29,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
 <!-- Top bar with the code collected so far (filled in by game.js) -->
 <header class="hud">
   <div class="hud-title"><span aria-hidden="true">🥚</span> EGG-001</div>
+  <button type="button" class="sound-toggle" id="soundToggle" aria-label="Turn music off">🔊</button>
   <div class="code-wrap">
     <span class="code-label">Code</span>
     <div class="code" id="code" aria-label="Collected code"></div>
@@ -49,17 +50,17 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <!-- Order matters: settings and answer fingerprints, then the core, then each stage, then start. -->
-<script src="js/config.js?v=5"></script>
-<script src="js/answer-hashes.js?v=5"></script>
-<script src="js/game.js?v=5"></script>
-<script src="js/sounds.js?v=5"></script>
-<script src="js/clue-timer.js?v=5"></script>
-<script src="js/stage-1-riddles.js?v=5"></script>
-<script src="js/stage-2-night-watch.js?v=5"></script>
-<script src="js/village-art.js?v=5"></script>
-<script src="js/village-places.js?v=5"></script>
-<script src="js/stage-3-village.js?v=5"></script>
-<script src="js/stage-4-finale.js?v=5"></script>
-<script src="js/start.js?v=5"></script>
+<script src="js/config.js?v=6"></script>
+<script src="js/answer-hashes.js?v=6"></script>
+<script src="js/game.js?v=6"></script>
+<script src="js/sounds.js?v=6"></script>
+<script src="js/clue-timer.js?v=6"></script>
+<script src="js/stage-1-riddles.js?v=6"></script>
+<script src="js/stage-2-night-watch.js?v=6"></script>
+<script src="js/village-art.js?v=6"></script>
+<script src="js/village-places.js?v=6"></script>
+<script src="js/stage-3-village.js?v=6"></script>
+<script src="js/stage-4-finale.js?v=6"></script>
+<script src="js/start.js?v=6"></script>
 </body>
 </html>

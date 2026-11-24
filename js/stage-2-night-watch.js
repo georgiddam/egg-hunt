@@ -56,9 +56,9 @@
             <defs>
               <clipPath id="lensClip"><circle class="lens" r="${LENS_RADIUS}" cx="-999" cy="-999"/></clipPath>
             </defs>
-            <image href="img/farm.png?v=5" width="${PICTURE_WIDTH}" height="${PICTURE_HEIGHT}"/>
+            <image href="img/farm.png?v=6" width="${PICTURE_WIDTH}" height="${PICTURE_HEIGHT}"/>
             <g clip-path="url(#lensClip)">
-              <image class="zoomed" href="img/farm.png?v=5" width="${PICTURE_WIDTH * ZOOM}" height="${PICTURE_HEIGHT * ZOOM}" x="-9999" y="-9999"/>
+              <image class="zoomed" href="img/farm.png?v=6" width="${PICTURE_WIDTH * ZOOM}" height="${PICTURE_HEIGHT * ZOOM}" x="-9999" y="-9999"/>
             </g>
             <circle class="lens lens-rim" r="${LENS_RADIUS}" cx="-999" cy="-999" pointer-events="none"/>
           </svg>

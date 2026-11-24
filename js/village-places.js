@@ -234,10 +234,11 @@
             <h3>📚 The bookshelf</h3>
             <div class="shelf">${BOOKS.map(([title, colour], i) =>
               `<span class="book" style="background:${colour};width:${78 + (i * 7) % 20}%">${Game.escape(title)}</span>`).join('')}</div>`) },
-        { area: [70, 176, 60, 28], label: 'Read the open book', action: () => say(`
+        { area: [70, 176, 60, 28], label: 'Sit at the desk', action: () => { api.sound.writing(); say(`
             <p class="big-line">📖 "Pâté de Foie Gras", open at the goose with the golden eggs.
             A bookmark says: <i>"Short read." — ${n.player}</i></p>
-            <p class="fact">💡 <b>Fun fact:</b> Asimov wrote or edited more than 500 books, and he typed about 90 words a minute.</p>`) }
+            <p class="fact">💡 <b>Fun fact:</b> Asimov wrote or edited more than 500 books, and he typed about 90 words a minute.</p>
+            <p class="muted small">✍️ You scribble a note in the margin: "Not a short read."</p>`); } }
       ],
       people: [
         {

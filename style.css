@@ -37,6 +37,9 @@ body {
   background: var(--brown); color: #fff3d6;
   box-shadow: 0 3px 0 #160e07;
 }
+.sound-toggle { margin-left: auto; margin-right: 12px; background: none; border: 2px solid #5a4632; border-radius: 10px;
+  font-size: 18px; line-height: 1; padding: 5px 8px; cursor: pointer; }
+.sound-toggle:hover { border-color: var(--yolk); }
 .hud-title { font-family: var(--pixel); font-size: 12px; letter-spacing: 1px; }
 .code-wrap { display: flex; align-items: center; gap: 10px; }
 .code-label { font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: #c9b08c; }
