@@ -6,7 +6,7 @@
  *     colour only a little different from what's behind them.
  *   - A magnifying glass follows the mouse or finger (an SVG clip with a zoomed
  *     copy of the picture inside it).
- *   - Every 3 minutes the game offers a clue: a short rhyme saying where to look.
+ *   - Timed clues (clue-timer.js): the player picks which digit they want help with.
  *   - The player types the 3 digits, which are checked against a fingerprint.
  *
  * The digits exist only as pixels in the picture, never in this code.
@@ -18,33 +18,22 @@
   const PICTURE_HEIGHT = 500;
   const LENS_RADIUS = 70;           // in picture units
   const ZOOM = 2.5;
-  const CLUE_EVERY_MS = 3 * 60 * 1000;
-
-  // Where to look, one rhyme per digit (left to right).
+  // Where to look: two clues per digit (left to right). The first rhymes, the second is plainer.
   const CLUES = [
-    'The first is painted, red on red,<br>on planks where all the cows are fed.',
-    'The second is carved in the old tree’s bark,<br>low on the trunk, where the wood is dark.',
-    'The last is woven, gold on gold,<br>in the pile of hay the farmer rolled.'
+    ['The first one floats where the birds fly by,<br>soft and white, way up in the sky.',
+     'Look closely at the cloud on the far left.'],
+    ['The second is worn by the one who moos,<br>a faint grey mark that she didn’t choose.',
+     'Look at the white part of the cow’s side.'],
+    ['The last one hides where the chickens sleep,<br>up on the roof where the shingles creep.',
+     'Look at the roof of the little chicken coop, on the right.']
   ];
+  const DIGIT_LABELS = ['1st number', '2nd number', '3rd number'];
 
   const WRONG_LINES = [
     'Nope. Look closer.',
     'Not quite. Read them left to right.',
     'Wrong. Those numbers are hiding better than that.'
   ];
-
-  // Clues already given, and when the next one is offered, survive a refresh.
-  const CLUE_KEY = 'egghunt-v2-clues';
-  function loadClues() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(CLUE_KEY));
-      if (saved && Number.isInteger(saved.shown) && typeof saved.nextAt === 'number') return saved;
-    } catch (error) { /* storage blocked or empty */ }
-    return { shown: 0, nextAt: Date.now() + CLUE_EVERY_MS };
-  }
-  function saveClues(clues) {
-    try { localStorage.setItem(CLUE_KEY, JSON.stringify(clues)); } catch (error) { /* ignore */ }
-  }
 
   Game.stages.night = {
     mount(app) {
@@ -67,20 +56,15 @@
             <defs>
               <clipPath id="lensClip"><circle class="lens" r="${LENS_RADIUS}" cx="-999" cy="-999"/></clipPath>
             </defs>
-            <image href="img/farm.png" width="${PICTURE_WIDTH}" height="${PICTURE_HEIGHT}"/>
+            <image href="img/farm.png?v=5" width="${PICTURE_WIDTH}" height="${PICTURE_HEIGHT}"/>
             <g clip-path="url(#lensClip)">
-              <image class="zoomed" href="img/farm.png" width="${PICTURE_WIDTH * ZOOM}" height="${PICTURE_HEIGHT * ZOOM}" x="-9999" y="-9999"/>
+              <image class="zoomed" href="img/farm.png?v=5" width="${PICTURE_WIDTH * ZOOM}" height="${PICTURE_HEIGHT * ZOOM}" x="-9999" y="-9999"/>
             </g>
             <circle class="lens lens-rim" r="${LENS_RADIUS}" cx="-999" cy="-999" pointer-events="none"/>
           </svg>
         </div>
 
-        <div class="clue-offer" id="clueOffer" hidden>
-          <span>🔍 Stuck? Want a clue?</span>
-          <button type="button" class="btn btn-small" id="clueYes">Yes please</button>
-          <button type="button" class="btn btn-ghost btn-small" id="clueNo">Not yet</button>
-        </div>
-        <div id="clueList"></div>
+        <div id="clueBar"></div>
 
         <section class="card" id="answerCard">
           <form id="answerForm" autocomplete="off">
@@ -98,10 +82,8 @@
       const input = app.querySelector('#answer');
       const submitButton = app.querySelector('#submitButton');
       const message = app.querySelector('#message');
-      const clueOffer = app.querySelector('#clueOffer');
-      const clueList = app.querySelector('#clueList');
       const limiter = Game.makeGuessLimiter();
-      const clues = loadClues();
+      const dialog = Game.makeDialog(app);
 
       /* ---- The magnifying glass ---------------------------------------- */
 
@@ -134,39 +116,17 @@
         if (event.pointerType === 'mouse') moveLens(-999, -999);
       });
 
-      /* ---- Clues every 3 minutes ---------------------------------------- */
+      /* ---- Timed clues ---------------------------------------------------- */
 
-      function showClues() {
-        clueList.innerHTML = CLUES.slice(0, clues.shown)
-          .map((clue, i) => `<p class="verse clue"><b>Clue ${i + 1}:</b><br>${clue}</p>`).join('');
-      }
-
-      function checkClueTimer() {
-        if (Game.isSolved(1) || clues.shown >= CLUES.length) {
-          clueOffer.hidden = true;
-          return;
-        }
-        if (Date.now() >= clues.nextAt) clueOffer.hidden = false;
-      }
-
-      app.querySelector('#clueYes').addEventListener('click', () => {
-        clues.shown = Math.min(CLUES.length, clues.shown + 1);
-        clues.nextAt = Date.now() + CLUE_EVERY_MS;
-        saveClues(clues);
-        clueOffer.hidden = true;
-        showClues();
+      const clueTimer = Game.makeClueTimer({
+        id: 'night',
+        clues: CLUES,
+        digitLabels: DIGIT_LABELS,
+        bar: app.querySelector('#clueBar'),
+        openDialog: dialog.open,
+        closeDialog: dialog.close
       });
-      app.querySelector('#clueNo').addEventListener('click', () => {
-        clues.nextAt = Date.now() + CLUE_EVERY_MS;
-        saveClues(clues);
-        clueOffer.hidden = true;
-      });
-
-      saveClues(clues);
-      showClues();
-      checkClueTimer();
-      const clueTimer = setInterval(checkClueTimer, 5000);
-      this.stop = () => clearInterval(clueTimer);
+      this.stop = () => clueTimer.stop();
 
       /* ---- Answer ------------------------------------------------------- */
 
@@ -187,7 +147,7 @@
       }
 
       function finish(digits) {
-        clueOffer.hidden = true;
+        clueTimer.hide();
         answerCard.innerHTML = `
           <div class="kicker">Stage 2 complete</div>
           <h1>Sharp eyes! 🔍</h1>

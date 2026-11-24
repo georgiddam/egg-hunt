@@ -4,10 +4,14 @@ A small puzzle website: three stages that each give part of an 8-digit code.
 
 1. **Riddles:** three rhyming riddles. The last answer is the first 2 digits.
 2. **Spot the Numbers:** three digits are hidden in a busy farm picture, with a magnifying
-   glass. Every 3 minutes the game offers a rhyming clue about where to look.
+   glass.
 3. **Eggsville:** a top-down mini game. Walk down a road with three houses (library, barber,
    lodge) and an animal paddock. The safe in the lodge shows 3 pictures under each digit
-   that point to where it's found.
+   that point to where it's found. Things to poke at have fun facts, and a few make sounds
+   (crackling fire, an owl, a splash).
+
+Stages 2 and 3 have **timed clues**: after 6 minutes (then 4, then 2) the player can pick a
+digit and get a clue for it. Each digit has 2 clues, and a "Clues" button keeps them all.
 
 It's plain HTML, CSS and JavaScript: no build step, no server and no dependencies.
 
@@ -35,6 +39,8 @@ itself is never on this site, only on the password-protected Pastebin.
 | `js/config.js` | Names, the prize link and the final message. |
 | `js/answer-hashes.js` | Fingerprints of the correct answers. |
 | `js/game.js` | Shared core: answer checking, progress saving, switching stages, the code bar. |
+| `js/sounds.js` | Small sound effects, made in the browser (no sound files). |
+| `js/clue-timer.js` | The timed clues and the "Clues" list, used by stages 2 and 3. |
 | `js/stage-1-riddles.js` | Intro screen and the riddle chain. |
 | `js/stage-2-night-watch.js` | The farm picture, the magnifying glass and the timed clues. |
 | `js/village-art.js` | Pixel-art drawing helpers for Stage 3. |

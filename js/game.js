@@ -154,6 +154,10 @@
       // (digits from skipped stages show as "?", because the site doesn't know them).
       const params = new URLSearchParams(location.search);
       if (params.has('reset')) {
+        // Forget everything this game saved: progress, clue timers, riddle step, village state.
+        try {
+          Object.keys(localStorage).filter(key => key.startsWith('egghunt-')).forEach(key => localStorage.removeItem(key));
+        } catch (error) { /* storage blocked */ }
         this.progress = freshProgress();
       }
       if (params.has('yolk')) {

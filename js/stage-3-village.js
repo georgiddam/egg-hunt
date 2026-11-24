@@ -33,6 +33,17 @@
     ['🪞', '💇', '🔢']
   ];
 
+  // Timed clues for the safe (see clue-timer.js): two per digit.
+  const SAFE_CLUES = [
+    ['Eight books stand upon the shelf,<br>but not all by the robot man himself.',
+     'Count only the library books that Isaac Asimov wrote. Google the titles if you need to.'],
+    ['Some were born and some were hatched;<br>count the ones whose shells were scratched.',
+     'Count the animals in and around the paddock that hatched from an egg. One furry one counts too.'],
+    ['The barber’s mirror tells no lies;<br>count what’s on top, and trust your eyes.',
+     'Count the hairs on your head.']
+  ];
+  const SAFE_DIGIT_LABELS = SAFE_HINTS.map((pictures, i) => `${['1st', '2nd', '3rd'][i]} number ${pictures.slice(0, 2).join('')}`);
+
   // A rectangle is [x, y, width, height]. Do two rectangles overlap?
   function rectanglesOverlap(a, b) {
     return a[0] < b[0] + b[2] && a[0] + a[2] > b[0] &&
@@ -71,7 +82,7 @@
 
         <div class="village-bar">
           <span class="place-name" id="placeName"></span>
-          <button type="button" class="btn btn-ghost btn-small" id="signButton">🪧 Rules</button>
+          <div id="clueBar"></div>
         </div>
 
         <div class="game-wrap">
@@ -137,6 +148,7 @@
         dialog.hidden = false;
         dialogOpen = true;
         releaseAllKeys();
+        return dialogBody;
       }
 
       function closeDialog() {
@@ -158,22 +170,29 @@
         openDialog(`
           <h3>🪧 Nearly there!</h3>
           <p class="verse">
-            You're nearly there, the end's in sight!<br>
-            Three houses line this dusty road.<br>
-            One keeps a safe that's locked up tight;<br>
-            its pictures point you to the code.
+            You're nearly there, the finish is near,<br>
+            just one last puzzle and then you're clear.<br>
+            Three houses stand along this lane,<br>
+            and one holds a safe with a lock and chain.<br>
+            Under each number, three pictures show<br>
+            the place to look and the thing to know.
           </p>
           <div class="rules">
-            <span>🏠 3 houses</span><span>🔒 1 safe</span><span>🔢 3 digits</span>
+            <span>🏠 3 houses</span><span>🔒 1 safe</span><span>🔢 3 numbers</span>
           </div>
-          <p class="muted small center">The safe is in the Lodge. Under each digit are 3 pictures: they show where to look.</p>`,
+          <p class="muted small center">The safe is in the Lodge. Poke at everything: there's lots to find.</p>`,
           [{ label: "Let's go", primary: true, onClick: closeDialog }]);
       }
 
-      app.querySelector('#signButton').addEventListener('click', event => {
-        event.currentTarget.blur();
-        showSign();
-      });
+      // The first popup: just how to play.
+      function showTip() {
+        openDialog(`
+          <h3>👋 Welcome to Eggsville</h3>
+          <p class="big-line">Walk up to things and press <kbd>E</kbd> to interact with them.
+          That's how you find everything.</p>
+          <p class="muted">Start with the sign next to you.</p>`,
+          [{ label: 'Got it', primary: true, onClick: closeDialog }]);
+      }
 
       /* ==================================================================
        * The safe (in the lodge)
@@ -277,6 +296,8 @@
 
       function unlockSafe(digits) {
         Game.completePart(2, digits);
+        Game.sound.chime();
+        clueTimer.hide();
         state.flags.safeOpen = true;
         saveVillageState(state);
         openDialog(
@@ -296,6 +317,7 @@
         say: openDialog,
         close: closeDialog,
         showSign,
+        sound: Game.sound,
         flags: state.flags,
         setFlag(name) {
           state.flags[name] = true;
@@ -317,6 +339,10 @@
         const area = setup.area;
         const list = [];
         setup.list.forEach(info => {
+          if (info.fixed) {
+            list.push(Object.assign({}, info, { x: info.fixed.x, y: info.fixed.y, speedX: 0, speedY: 0, timeUntilNewDirection: Infinity, facing: info.fixed.facing || 1 }));
+            return;
+          }
           let x, y, attempts = 0;
           do {
             x = area.left + random() * (area.right - area.left);
@@ -554,6 +580,7 @@
         if (!area) return;
 
         for (const hen of animals) {
+          if (hen.fixed) continue;
           hen.timeUntilNewDirection -= frameFactor;
           if (hen.timeUntilNewDirection <= 0) {
             if (random() < 0.3) {
@@ -586,6 +613,7 @@
           for (let j = i + 1; j < animals.length; j++) {
             const a = animals[i];
             const b = animals[j];
+            if (a.fixed || b.fixed) continue;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
             const distance = Math.hypot(dx, dy);
@@ -685,20 +713,31 @@
       enterPlace('outside');
       animationId = requestAnimationFrame(gameLoop);
 
+      const clueTimer = Game.makeClueTimer({
+        id: 'village',
+        clues: SAFE_CLUES,
+        digitLabels: SAFE_DIGIT_LABELS,
+        bar: app.querySelector('#clueBar'),
+        openDialog,
+        closeDialog
+      });
+      if (Game.isSolved(2)) clueTimer.hide();
+
       // Called when leaving this stage: stop the loop and remove keyboard listeners.
       this.stop = () => {
         running = false;
         cancelAnimationFrame(animationId);
+        clueTimer.stop();
         window.removeEventListener('keydown', onKeyDown);
         window.removeEventListener('keyup', onKeyUp);
         window.removeEventListener('blur', releaseAllKeys);
       };
 
-      // Show the sign with the rules the first time.
+      // The first time: a tip on how to play. The rules are on the sign.
       if (!state.flags.greeted) {
         api.setFlag('greeted');
         setTimeout(() => {
-          if (running && !dialogOpen) showSign();
+          if (running && !dialogOpen) showTip();
         }, 500);
       }
     },

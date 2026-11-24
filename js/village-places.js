@@ -1,7 +1,7 @@
 /*
  * village-places.js — the places in Stage 3 (Eggsville) and everything in them.
  *
- *   outside   the road, a sign with the rules, three houses and the animal paddock
+ *   outside   the road, a sign with the rules, a campfire, three houses and the animal paddock
  *   library   a bookshelf and a robot librarian          -> 1st digit
  *   (paddock) animals wandering outside                  -> 2nd digit
  *   barber    a mirror                                   -> 3rd digit
@@ -81,18 +81,22 @@
       paint.rect(x + 3, y, 10, 6, '#3f8a38');
     }
 
-    // The animals in the paddock. `kind` picks the drawing in village-art.js.
+    // The animals in and around the paddock, each with a small fun fact.
     const ANIMAL_LINES = {
-      hen: '🐔 A hen. She gives you a look that says "eggs are extra".',
-      duck: '🦆 A duck. Quack. That\'s all you\'re getting.',
-      goose: '🪿 A goose. It honks at you. You leave it alone.',
-      turtle: '🐢 A turtle. It\'s been walking to the fence since Tuesday.',
-      platypus: '🦫 A platypus! Duck bill, beaver tail, otter feet. Nature\'s group project.',
-      sheep: '🐑 A sheep. Her ear tag says "Butcher: Tuesday".',
-      cow: '🐄 A cow. Moo.',
-      pig: '🐖 A pig, rolling in something you hope is mud.',
-      dog: '🐕 A farm dog. Very good boy. Counts sheep for fun.'
+      hen: ['🐔 A hen.', 'Hens talk to their chicks while the chicks are still inside the egg.'],
+      goose: ['🪿 A goose. It honks at you.', 'Geese pair up for life, and hold a grudge for about as long.'],
+      platypus: ['🦫 A platypus! Duck bill, beaver tail, otter feet.', 'It has no stomach, and the males have venom spurs on their back feet.'],
+      kiwi: ['🥝 A kiwi, New Zealand\'s own.', 'Its nostrils are at the very tip of its long beak, for sniffing out worms.'],
+      owl: ['🦉 An owl, watching from the fence post. Hoo-hoo.', 'Owls can\'t move their eyes, so they turn their whole head, up to about 270 degrees.'],
+      sheep: ['🐑 A sheep. Her ear tag says "Butcher: Tuesday".', 'Sheep can remember the faces of around 50 other sheep.'],
+      cow: ['🐄 A cow. Moo.', 'Cows have best friends, and get stressed when they\'re apart.'],
+      pig: ['🐖 A pig, rolling in something you hope is mud.', 'Pigs can\'t sweat. The mud is how they cool down.'],
+      dog: ['🐕 A farm dog. Very good boy.', 'A dog\'s nose print is as unique as a human fingerprint.']
     };
+
+    function funFact(title, fact) {
+      say(`<p class="big-line">${title}</p><p class="fact">💡 <b>Fun fact:</b> ${fact}</p>`);
+    }
 
     const outside = {
       id: 'outside',
@@ -103,23 +107,36 @@
         [220, 70, 90, 70],    // barber
         [340, 70, 120, 70],   // lodge
         [30, 178, 26, 10],    // the sign
+        [40, 254, 26, 14],    // campfire
         [100, 234, 130, 4], [254, 234, 126, 4], [100, 234, 4, 74], [376, 234, 4, 74], [100, 304, 280, 4],   // paddock fence
         [16, 20, 56, 30]      // pond
       ],
       things: [
         { area: [26, 164, 34, 26], label: 'Read the sign', action: () => api.showSign() },
-        { area: [16, 16, 56, 38], label: 'Go fishing', action: () => say(`
-            <h3>🎣 The pond</h3>
-            <p>Nothing's biting. The river fish is still on the bucket list.</p>`) }
+        { area: [36, 248, 34, 26], label: 'Sit by the campfire', action: () => {
+            api.sound.crackle(5);
+            say(`<p class="big-line">🔥 You sit by the fire for a minute. It crackles away.<br>
+                 Nothing to estimate. Nothing to chase. Just the fire.</p>
+                 <p class="fact">💡 <b>Fun fact:</b> The crackle is water and sap inside the wood turning to steam and bursting out.</p>`);
+          } },
+        { area: [16, 16, 56, 38], label: 'Go fishing', action: () => {
+            api.sound.splash();
+            funFact('🎣 You cast a line. Nothing\'s biting. The river fish stays on the bucket list.',
+              'Trout can see colour, which is why fishing lures are so bright.');
+          } },
+        { area: [296, 96, 14, 40], label: 'Look at the barber pole', action: () => funFact('💈 A barber pole, spinning away.',
+            'The red and white stripes go back to medieval barbers, who also pulled teeth and let blood.') }
       ],
       people: [],
       animals: {
         area: { left: 116, right: 364, top: 254, bottom: 298 },
-        list: ['hen', 'sheep', 'duck', 'cow', 'platypus', 'pig', 'goose', 'dog', 'turtle']
+        list: ['hen', 'sheep', 'kiwi', 'cow', 'platypus', 'pig', 'goose', 'dog']
           .map(kind => ({ kind, name: kind }))
+          .concat([{ kind: 'owl', name: 'owl', fixed: { x: 384, y: 252, facing: -1 } }])   // on a fence post
       },
       inspectAnimal(animal) {
-        say(`<p class="big-line">${ANIMAL_LINES[animal.kind]}</p>`);
+        if (animal.kind === 'owl') api.sound.hoot();
+        funFact(...ANIMAL_LINES[animal.kind]);
       },
       exits: [
         { area: [130, 138, 20, 8], to: 'library' },
@@ -167,6 +184,17 @@
         paint.rect(30, 30, 6, 1, '#9fd0ff');
         paint.rect(48, 38, 6, 1, '#9fd0ff');
 
+        // Campfire with log seats
+        paint.rect(32, 262, 8, 4, '#6b4423');
+        paint.rect(68, 262, 8, 4, '#6b4423');
+        paint.rect(42, 264, 22, 4, '#5a3a1a');
+        paint.rect(44, 260, 18, 4, '#7a7a82');
+        const flame = Math.floor(frame / 5) % 3;
+        paint.rect(46, 252 - flame, 14, 9 + flame, '#e2581a');
+        paint.rect(49, 254 - flame * 2, 8, 7 + flame * 2, '#ffb02e');
+        paint.rect(51, 257, 4, 4, '#fff0a0');
+        if (frame % 40 < 20) paint.rect(52 + flame, 244 - flame * 2, 1, 1, '#ffb02e');
+
         // Paddock: fence with a gap at the top to walk in
         paint.rect(104, 238, 272, 66, '#6aa84f');
         const fence = '#c79a5b';
@@ -204,11 +232,12 @@
       things: [
         { area: [SHELF_X - 8, 40, 160, 34], label: 'Look at the bookshelf', action: () => say(`
             <h3>📚 The bookshelf</h3>
-            <div class="shelf">${BOOKS.map(([title, colour]) =>
-              `<span class="book" style="background:${colour}">${Game.escape(title)}</span>`).join('')}</div>`) },
+            <div class="shelf">${BOOKS.map(([title, colour], i) =>
+              `<span class="book" style="background:${colour};width:${78 + (i * 7) % 20}%">${Game.escape(title)}</span>`).join('')}</div>`) },
         { area: [70, 176, 60, 28], label: 'Read the open book', action: () => say(`
             <p class="big-line">📖 "Pâté de Foie Gras", open at the goose with the golden eggs.
-            A bookmark says: <i>"Short read." — ${n.player}</i></p>`) }
+            A bookmark says: <i>"Short read." — ${n.player}</i></p>
+            <p class="fact">💡 <b>Fun fact:</b> Asimov wrote or edited more than 500 books, and he typed about 90 words a minute.</p>`) }
       ],
       people: [
         {
@@ -328,8 +357,13 @@
       ]),
       things: [
         { area: [204, 40, 72, 38], label: 'Open the safe', action: () => api.openSafe() },
-        { area: [376, 40, 34, 36], label: 'Open the brew fridge', action: () => say(`
-            <p class="big-line">🍺 Your home brew, nicely chilled. Strictly for after the code.</p>`) }
+        { area: [376, 40, 34, 36], label: 'Open the brew fridge', action: () => funFact(
+            '🍺 Your home brew, nicely chilled. Strictly for after the code.',
+            'Hops are a close cousin of cannabis. Same plant family.') },
+        { area: [32, 140, 32, 60], label: 'Warm up by the fire', action: () => {
+            api.sound.crackle(5);
+            funFact('🔥 Warm and cosy. The fire crackles and pops.', 'The blue part of a flame is the hottest part.');
+          } }
       ],
       people: [],
       exits: [{ area: ROOM_EXIT_AREA, to: 'outside' }],
